@@ -1,0 +1,5 @@
+.theme-form { background: white; padding: 20px; border-radius: 8px; margin-top: 20px; display: flex; flex-direction: column; gap: 15px; }
+.theme-form label { font-weight: 600; }
+.theme-form input[type="color"] { width: 100px; height: 50px; }
+.theme-form button { padding: 12px; background: #3B82F6; color: white; border: none; border-radius: 8px; cursor: pointer; }
+
