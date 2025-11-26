@@ -143,8 +143,15 @@
   align-items: center;
 }
 
+.teacher-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
 .teacher-info h3 {
-  margin: 0 0 8px 0;
+  margin: 0;
   color: #213547;
 }
 
@@ -153,9 +160,57 @@
   color: #6b7280;
 }
 
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-active {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-expired {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.status-inactive {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
 .teacher-actions {
   display: flex;
   gap: 10px;
+}
+
+.resend-button {
+  padding: 8px 16px;
+  background: #10B981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.resend-button:hover:not(:disabled) {
+  background: #059669;
+}
+
+.resend-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .edit-button {

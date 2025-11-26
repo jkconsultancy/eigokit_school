@@ -51,6 +51,7 @@ export const schoolAPI = {
     return api.put(`/api/schools/${schoolId}/teachers/${teacherId}`, formData).then(r => r.data);
   },
   deleteTeacher: (schoolId, teacherId) => api.delete(`/api/schools/${schoolId}/teachers/${teacherId}`).then(r => r.data),
+  resendTeacherInvitation: (schoolId, teacherId) => api.post(`/api/schools/${schoolId}/teachers/${teacherId}/resend-invitation`).then(r => r.data),
   
   // Locations
   getLocations: (schoolId) => api.get(`/api/schools/${schoolId}/locations`).then(r => r.data),

@@ -10,6 +10,7 @@ export default function Teachers() {
   const [showForm, setShowForm] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState(null);
   const [formData, setFormData] = useState({ name: '', email: '' });
+  const [resendingInvite, setResendingInvite] = useState({});
   const navigate = useNavigate();
   const schoolId = localStorage.getItem('school_id');
 
@@ -28,6 +29,14 @@ export default function Teachers() {
       setTeachers(response.teachers || []);
       setError('');
     } catch (err) {
+      if (err.response?.status === 401) {
+        // Session expired or invalid - log out and redirect to sign in
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('school_id');
+        localStorage.removeItem('user_id');
+        navigate('/signin');
+        return;
+      }
       setError(err.response?.data?.detail || 'Failed to load teachers');
     } finally {
       setLoading(false);
@@ -48,6 +57,13 @@ export default function Teachers() {
       setFormData({ name: '', email: '' });
       loadTeachers();
     } catch (err) {
+      if (err.response?.status === 401) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('school_id');
+        localStorage.removeItem('user_id');
+        navigate('/signin');
+        return;
+      }
       setError(err.response?.data?.detail || 'Failed to save teacher');
     }
   };
@@ -64,6 +80,13 @@ export default function Teachers() {
       await schoolAPI.deleteTeacher(schoolId, teacherId);
       loadTeachers();
     } catch (err) {
+      if (err.response?.status === 401) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('school_id');
+        localStorage.removeItem('user_id');
+        navigate('/signin');
+        return;
+      }
       setError(err.response?.data?.detail || 'Failed to delete teacher');
     }
   };
@@ -72,6 +95,68 @@ export default function Teachers() {
     setShowForm(false);
     setEditingTeacher(null);
     setFormData({ name: '', email: '' });
+  };
+
+  const getTeacherStatus = (teacher) => {
+    // If no invitation_status, assume active (legacy teacher or pre-invitation system)
+    if (!teacher.invitation_status || teacher.invitation_status === 'accepted') {
+      return { text: 'Active', class: 'status-active' };
+    }
+    
+    switch (teacher.invitation_status) {
+      case 'pending':
+        // Check if expired
+        if (teacher.invitation_expires_at) {
+          const expiresAt = new Date(teacher.invitation_expires_at);
+          if (expiresAt < new Date()) {
+            return { text: 'Expired', class: 'status-expired' };
+          }
+        }
+        return { text: 'Awaiting Confirmation', class: 'status-pending' };
+      case 'expired':
+        return { text: 'Expired', class: 'status-expired' };
+      default:
+        return { text: 'Inactive', class: 'status-inactive' };
+    }
+  };
+
+  const handleResendInvite = async (teacherId) => {
+    try {
+      setResendingInvite(prev => ({ ...prev, [teacherId]: true }));
+      setError(''); // Clear previous errors
+      const response = await schoolAPI.resendTeacherInvitation(schoolId, teacherId);
+      if (response.invitation_sent) {
+        // Reload teachers to get updated status
+        await loadTeachers();
+        alert('Invitation email sent successfully!');
+      } else {
+        // Show more specific error message
+        let errorMessage = response.message || 'Failed to send invitation email.';
+        
+        if (response.error === 'email_service_not_configured') {
+          errorMessage = 'Email service is not configured. The invitation token has been updated, but no email was sent. Please configure RESEND_API_KEY in your backend .env file.';
+        } else if (response.error === 'email_send_failed') {
+          errorMessage = 'Invitation token updated, but email failed to send. Please check your email service configuration (Resend API key and settings).';
+        }
+        
+        setError(errorMessage);
+        // Still reload to show updated token/status
+        await loadTeachers();
+      }
+    } catch (err) {
+      if (err.response?.status === 401) {
+        // Treat invalid authentication as an expired session
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('school_id');
+        localStorage.removeItem('user_id');
+        navigate('/signin');
+        return;
+      }
+      const errorDetail = err.response?.data?.detail || err.response?.data?.message || err.message;
+      setError(errorDetail || 'Failed to resend invitation. Please try again.');
+    } finally {
+      setResendingInvite(prev => ({ ...prev, [teacherId]: false }));
+    }
   };
 
   if (loading) {
@@ -130,18 +215,40 @@ export default function Teachers() {
           {teachers.length === 0 ? (
             <div className="empty-state">No teachers found. Add your first teacher to get started.</div>
           ) : (
-            teachers.map(teacher => (
-              <div key={teacher.id} className="teacher-card">
-                <div className="teacher-info">
-                  <h3>{teacher.name}</h3>
-                  <p>{teacher.email}</p>
+            teachers.map(teacher => {
+              const status = getTeacherStatus(teacher);
+              // Show resend button for pending, expired, or teachers without invitation_status (legacy)
+              const showResendButton = teacher.invitation_status === 'pending' || 
+                                       teacher.invitation_status === 'expired' || 
+                                       !teacher.invitation_status ||
+                                       status.class === 'status-expired' ||
+                                       status.class === 'status-pending';
+              
+              return (
+                <div key={teacher.id} className="teacher-card">
+                  <div className="teacher-info">
+                    <div className="teacher-header">
+                      <h3>{teacher.name}</h3>
+                      <span className={`status-badge ${status.class}`}>{status.text}</span>
+                    </div>
+                    <p>{teacher.email}</p>
+                  </div>
+                  <div className="teacher-actions">
+                    {showResendButton && (
+                      <button 
+                        className="resend-button" 
+                        onClick={() => handleResendInvite(teacher.id)}
+                        disabled={resendingInvite[teacher.id]}
+                      >
+                        {resendingInvite[teacher.id] ? 'Sending...' : 'Resend Invite'}
+                      </button>
+                    )}
+                    <button className="edit-button" onClick={() => handleEdit(teacher)}>Edit</button>
+                    <button className="delete-button" onClick={() => handleDelete(teacher.id)}>Delete</button>
+                  </div>
                 </div>
-                <div className="teacher-actions">
-                  <button className="edit-button" onClick={() => handleEdit(teacher)}>Edit</button>
-                  <button className="delete-button" onClick={() => handleDelete(teacher.id)}>Delete</button>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
