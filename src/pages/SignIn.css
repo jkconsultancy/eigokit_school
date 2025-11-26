@@ -82,6 +82,35 @@
   text-align: center;
 }
 
+.info-message {
+  background: #ecfdf5;
+  color: #166534;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.forgot-password {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #3B82F6;
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: underline;
+}
+
+.link-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .register-link {
   text-align: center;
   margin-top: 20px;

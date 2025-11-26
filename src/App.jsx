@@ -8,6 +8,7 @@ import Classes from './pages/Classes';
 import Students from './pages/Students';
 import Payments from './pages/Payments';
 import Branding from './pages/Branding';
+import ResetPassword from './pages/ResetPassword';
 import './App.css';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/signin" element={<SignIn />} />
+        <Route path="/auth/reset-password" element={<ResetPassword />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/teachers" element={<Teachers />} />

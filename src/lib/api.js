@@ -18,6 +18,22 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Global auth error handling: redirect to sign in when token is invalid/expired
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+    if (status === 401 || status === 403) {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('school_id');
+      if (!window.location.pathname.startsWith('/signin')) {
+        window.location.href = '/signin';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const schoolAPI = {
   signin: (email, password) => {
     const formData = new FormData();
@@ -35,6 +51,12 @@ export const schoolAPI = {
       formData.append('contact_info', contactInfo);
     }
     return api.post('/api/auth/school-admin/signup', formData).then(r => r.data);
+  },
+  requestPasswordReset: (email) => {
+    const formData = new FormData();
+    formData.append('email', email);
+    formData.append('app', 'school_admin');
+    return api.post('/api/auth/password-reset-request', formData).then(r => r.data);
   },
   // Teachers
   getTeachers: (schoolId) => api.get(`/api/schools/${schoolId}/teachers`).then(r => r.data),
