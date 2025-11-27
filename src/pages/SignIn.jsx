@@ -84,9 +84,9 @@ export default function SignIn() {
         <div className="forgot-password">
           <button
             type="button"
-            className="link-button"
             onClick={handlePasswordReset}
             disabled={loading || !email}
+            className="forgot-password-link"
           >
             Forgot password?
           </button>
