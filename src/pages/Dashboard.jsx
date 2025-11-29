@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { schoolAPI } from '../lib/api';
+import ThemeToggle from '../components/ThemeToggle';
 import './Dashboard.css';
 
 export default function Dashboard() {
@@ -189,6 +190,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      <ThemeToggle />
     </div>
   );
 }
