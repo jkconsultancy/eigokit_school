@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import SignIn from './pages/SignIn';
+import SelectSchool from './pages/SelectSchool';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Teachers from './pages/Teachers';
@@ -29,6 +30,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/signin" element={<SignIn />} />
+          <Route path="/select-school" element={<SelectSchool />} />
           <Route path="/auth/reset-password" element={<ResetPassword />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />

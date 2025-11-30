@@ -1,0 +1,21 @@
+.select-school-page {
+  min-height: 100vh;
+  background: var(--bg-primary, #f9fafb);
+  padding: 20px;
+}
+
+.back-button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: var(--primary-color, #3b82f6);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.back-button:hover {
+  background: var(--primary-color-dark, #2563eb);
+}
+

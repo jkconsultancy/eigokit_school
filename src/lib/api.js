@@ -44,6 +44,10 @@ export const schoolAPI = {
     formData.append('password', password);
     return api.post('/api/auth/school-admin/signin', formData).then(r => r.data);
   },
+  // Get user roles (supports multi-role system)
+  getUserRoles: () => api.get('/api/auth/user-roles').then(r => r.data),
+  // Get school admin roles for current user
+  getSchoolAdminRoles: () => api.get('/api/auth/school-admin/roles').then(r => r.data),
   signup: (email, password, name, schoolName, contactInfo, invitationToken) => {
     const formData = new FormData();
     formData.append('email', email);

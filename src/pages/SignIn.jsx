@@ -69,9 +69,26 @@ export default function SignIn() {
         
         if (response.access_token) {
           localStorage.setItem('access_token', response.access_token);
+          
+          // Multi-role support: Check if user has multiple school_admin roles
+          if (response.roles && response.roles.length > 1) {
+            // User has multiple schools - store roles and show selection
+            localStorage.setItem('user_roles', JSON.stringify(response.roles));
+            // If no school_id in response, navigate to school selection
+            if (!response.school_id) {
+              navigate('/select-school');
+              return;
+            }
+          }
+          
+          // Single school or school_id provided
           if (response.school_id) {
             localStorage.setItem('school_id', response.school_id);
+          } else if (response.roles && response.roles.length === 1) {
+            // Only one school, auto-select it
+            localStorage.setItem('school_id', response.roles[0].school_id);
           }
+          
           navigate('/dashboard');
         } else {
           setError('Sign in failed. Please try again.');
