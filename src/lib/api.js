@@ -23,13 +23,16 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error?.response?.status;
-    if (status === 401 || status === 403) {
+    // Only redirect on 401 (authentication errors), not 403 (authorization errors)
+    // 403 errors should be handled by the component (e.g., access denied messages)
+    if (status === 401) {
       localStorage.removeItem('access_token');
       localStorage.removeItem('school_id');
       if (!window.location.pathname.startsWith('/signin')) {
         window.location.href = '/signin';
       }
     }
+    // For 403 errors, let the component handle the error message
     return Promise.reject(error);
   }
 );
@@ -146,6 +149,12 @@ export const schoolAPI = {
   createPayment: (schoolId, payment) => api.post(`/api/schools/${schoolId}/payments`, payment).then(r => r.data),
   getTheme: (schoolId) => api.get(`/api/schools/${schoolId}/theme`).then(r => r.data),
   updateTheme: (schoolId, theme) => api.post(`/api/schools/${schoolId}/theme`, theme).then(r => r.data),
+  uploadBrandingAsset: (schoolId, file, assetType) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('asset_type', assetType);
+    return api.post(`/api/schools/${schoolId}/branding/upload`, formData).then(r => r.data);
+  },
   getDashboard: (schoolId) => api.get(`/api/schools/${schoolId}/dashboard`).then(r => r.data),
 };
 

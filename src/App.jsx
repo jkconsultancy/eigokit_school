@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import SignIn from './pages/SignIn';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -10,9 +11,18 @@ import Payments from './pages/Payments';
 import Branding from './pages/Branding';
 import ResetPassword from './pages/ResetPassword';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { loadTheme } from './lib/theme';
 import './App.css';
 
 function App() {
+  useEffect(() => {
+    // Load theme when app starts (only if user is signed in)
+    const schoolId = localStorage.getItem('school_id');
+    if (schoolId) {
+      loadTheme(schoolId);
+    }
+  }, []);
+
   return (
     <ThemeProvider>
       <Router>

@@ -30,7 +30,7 @@
 }
 
 .dashboard-page nav { display: flex; gap: 15px; margin: 20px 0; }
-.dashboard-page nav a { padding: 10px 20px; background: #3B82F6; color: white; text-decoration: none; border-radius: 8px; }
+.dashboard-page nav a { padding: 10px 20px; background: var(--primary-color, #3B82F6); color: white; text-decoration: none; border-radius: 8px; }
 .dashboard-page .error-message {
   background: #fee;
   color: #c33;
@@ -41,7 +41,7 @@
 .dashboard-page button {
   margin-top: 15px;
   padding: 10px 20px;
-  background: #3B82F6;
+  background: var(--primary-color, #3B82F6);
   color: white;
   border: none;
   border-radius: 8px;
@@ -49,7 +49,8 @@
   font-size: 16px;
 }
 .dashboard-page button:hover {
-  background: #2563EB;
+  background: var(--primary-color, #2563EB);
+  filter: brightness(0.9);
 }
 
 .metrics {
@@ -143,7 +144,7 @@
 .view-all-link {
   display: inline-block;
   margin-top: 10px;
-  color: #3B82F6;
+  color: var(--primary-color, #3B82F6);
   text-decoration: none;
   font-weight: 600;
   font-size: 14px;
