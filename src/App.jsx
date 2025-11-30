@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import SignIn from './pages/SignIn';
+import SelectSchool from './pages/SelectSchool';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Teachers from './pages/Teachers';
@@ -8,16 +10,27 @@ import Classes from './pages/Classes';
 import Students from './pages/Students';
 import Payments from './pages/Payments';
 import Branding from './pages/Branding';
+import ManageTeam from './pages/ManageTeam';
 import ResetPassword from './pages/ResetPassword';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { loadTheme } from './lib/theme';
 import './App.css';
 
 function App() {
+  useEffect(() => {
+    // Load theme when app starts (only if user is signed in)
+    const schoolId = localStorage.getItem('school_id');
+    if (schoolId) {
+      loadTheme(schoolId);
+    }
+  }, []);
+
   return (
     <ThemeProvider>
       <Router>
         <Routes>
           <Route path="/signin" element={<SignIn />} />
+          <Route path="/select-school" element={<SelectSchool />} />
           <Route path="/auth/reset-password" element={<ResetPassword />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
@@ -27,6 +40,7 @@ function App() {
           <Route path="/students" element={<Students />} />
           <Route path="/payments" element={<Payments />} />
           <Route path="/branding" element={<Branding />} />
+          <Route path="/team" element={<ManageTeam />} />
           <Route path="/" element={<Navigate to="/signin" replace />} />
         </Routes>
       </Router>

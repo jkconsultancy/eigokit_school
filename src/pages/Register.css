@@ -60,7 +60,7 @@
 
 .form-group input:focus {
   outline: none;
-  border-color: #3B82F6;
+  border-color: var(--primary-color, #3B82F6);
 }
 
 .form-group input::placeholder {
@@ -69,7 +69,7 @@
 
 .register-container button {
   padding: 12px;
-  background: #3B82F6;
+  background: var(--primary-color, #3B82F6);
   color: white;
   border: none;
   border-radius: 8px;
@@ -81,7 +81,8 @@
 }
 
 .register-container button:hover:not(:disabled) {
-  background-color: #2563EB;
+  background-color: var(--primary-color, #2563EB);
+  filter: brightness(0.9);
 }
 
 .register-container button:active:not(:disabled) {
@@ -121,12 +122,39 @@
 }
 
 .signin-link a {
-  color: #3B82F6;
+  color: var(--primary-color, #3B82F6);
   text-decoration: none;
   font-weight: 600;
 }
 
 .signin-link a:hover {
   text-decoration: underline;
+}
+
+.invitation-info {
+  background: #e0f2fe;
+  border: 1px solid #3B82F6;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.invitation-info p {
+  margin: 8px 0;
+  color: #1e40af;
+  font-size: 14px;
+}
+
+.field-note {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.form-group input:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
 }
 

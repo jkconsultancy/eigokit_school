@@ -9,6 +9,109 @@
   margin: 0;
 }
 
+.school-name-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.school-name-display {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.edit-icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.edit-icon-button:hover {
+  background-color: #f3f4f6;
+}
+
+.school-name-edit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.school-name-edit {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.name-error-message {
+  background: #fee;
+  color: #c33;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.name-success-message {
+  background: #d4edda;
+  color: #155724;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  border: 1px solid #c3e6cb;
+}
+
+.school-name-input {
+  padding: 8px 12px;
+  font-size: 24px;
+  font-weight: 600;
+  border: 2px solid var(--primary-color, #3B82F6);
+  border-radius: 6px;
+  min-width: 300px;
+}
+
+.save-button,
+.cancel-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.save-button {
+  background: #10B981;
+  color: white;
+}
+
+.save-button:hover:not(:disabled) {
+  background: #059669;
+}
+
+.save-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancel-button {
+  background: #6b7280;
+  color: white;
+}
+
+.cancel-button:hover:not(:disabled) {
+  background: #4b5563;
+}
+
+.cancel-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .logout-button {
   padding: 10px 20px;
   background: #dc2626 !important;
@@ -30,7 +133,7 @@
 }
 
 .dashboard-page nav { display: flex; gap: 15px; margin: 20px 0; }
-.dashboard-page nav a { padding: 10px 20px; background: #3B82F6; color: white; text-decoration: none; border-radius: 8px; }
+.dashboard-page nav a { padding: 10px 20px; background: var(--primary-color, #3B82F6); color: white; text-decoration: none; border-radius: 8px; }
 .dashboard-page .error-message {
   background: #fee;
   color: #c33;
@@ -41,7 +144,7 @@
 .dashboard-page button {
   margin-top: 15px;
   padding: 10px 20px;
-  background: #3B82F6;
+  background: var(--primary-color, #3B82F6);
   color: white;
   border: none;
   border-radius: 8px;
@@ -49,7 +152,8 @@
   font-size: 16px;
 }
 .dashboard-page button:hover {
-  background: #2563EB;
+  background: var(--primary-color, #2563EB);
+  filter: brightness(0.9);
 }
 
 .metrics {
@@ -143,7 +247,7 @@
 .view-all-link {
   display: inline-block;
   margin-top: 10px;
-  color: #3B82F6;
+  color: var(--primary-color, #3B82F6);
   text-decoration: none;
   font-weight: 600;
   font-size: 14px;
