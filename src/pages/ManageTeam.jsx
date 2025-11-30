@@ -2,15 +2,15 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { schoolAPI } from '../lib/api';
 import { loadTheme } from '../lib/theme';
-import './Teachers.css';
+import './ManageTeam.css';
 
-export default function Teachers() {
-  const [teachers, setTeachers] = useState([]);
+export default function ManageTeam() {
+  const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [editingTeacher, setEditingTeacher] = useState(null);
+  const [editingAdmin, setEditingAdmin] = useState(null);
   const [formData, setFormData] = useState({ name: '', email: '' });
   const [resendingInvite, setResendingInvite] = useState({});
   const navigate = useNavigate();
@@ -23,25 +23,31 @@ export default function Teachers() {
     }
     // Load theme for branding
     loadTheme(schoolId);
-    loadTeachers();
+    loadAdmins();
   }, [schoolId, navigate]);
 
-  const loadTeachers = async () => {
+  const loadAdmins = async () => {
     try {
       setLoading(true);
-      const response = await schoolAPI.getTeachers(schoolId);
-      setTeachers(response.teachers || []);
+      const response = await schoolAPI.getSchoolAdmins(schoolId);
+      setAdmins(response.admins || []);
       setError('');
     } catch (err) {
+      console.error('Error loading admins:', err);
       if (err.response?.status === 401) {
-        // Session expired or invalid - log out and redirect to sign in
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
         localStorage.removeItem('user_id');
         navigate('/signin');
         return;
       }
-      setError(err.response?.data?.detail || 'Failed to load teachers');
+      const errorMessage = err.response?.data?.detail || err.message || 'Failed to load team members';
+      setError(errorMessage);
+      console.error('Error details:', {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message
+      });
     } finally {
       setLoading(false);
     }
@@ -50,16 +56,26 @@ export default function Teachers() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
+    
+    if (!formData.name.trim() || !formData.email.trim()) {
+      setError('Name and email are required');
+      return;
+    }
+
     try {
-      if (editingTeacher) {
-        await schoolAPI.updateTeacher(schoolId, editingTeacher.id, formData.name, formData.email);
+      if (editingAdmin) {
+        await schoolAPI.updateSchoolAdmin(schoolId, editingAdmin.id, formData.name.trim(), formData.email.trim());
+        setSuccess('Admin updated successfully!');
       } else {
-        await schoolAPI.addTeacher(schoolId, formData.name, formData.email);
+        await schoolAPI.inviteSchoolAdmin(schoolId, formData.email.trim(), formData.name.trim());
+        setSuccess('Invitation sent successfully!');
       }
       setShowForm(false);
-      setEditingTeacher(null);
+      setEditingAdmin(null);
       setFormData({ name: '', email: '' });
-      loadTeachers();
+      loadAdmins();
+      setTimeout(() => setSuccess(''), 5000);
     } catch (err) {
       if (err.response?.status === 401) {
         localStorage.removeItem('access_token');
@@ -68,21 +84,23 @@ export default function Teachers() {
         navigate('/signin');
         return;
       }
-      setError(err.response?.data?.detail || 'Failed to save teacher');
+      setError(err.response?.data?.detail || (editingAdmin ? 'Failed to update admin' : 'Failed to send invitation'));
     }
   };
 
-  const handleEdit = (teacher) => {
-    setEditingTeacher(teacher);
-    setFormData({ name: teacher.name, email: teacher.email });
+  const handleEdit = (admin) => {
+    setEditingAdmin(admin);
+    setFormData({ name: admin.name || '', email: admin.email });
     setShowForm(true);
   };
 
-  const handleDelete = async (teacherId) => {
-    if (!window.confirm('Are you sure you want to delete this teacher?')) return;
+  const handleDelete = async (adminId) => {
+    if (!window.confirm('Are you sure you want to remove this team member from the school?')) return;
     try {
-      await schoolAPI.deleteTeacher(schoolId, teacherId);
-      loadTeachers();
+      await schoolAPI.deleteSchoolAdmin(schoolId, adminId);
+      setSuccess('Team member removed successfully!');
+      setTimeout(() => setSuccess(''), 5000);
+      loadAdmins();
     } catch (err) {
       if (err.response?.status === 401) {
         localStorage.removeItem('access_token');
@@ -91,27 +109,29 @@ export default function Teachers() {
         navigate('/signin');
         return;
       }
-      setError(err.response?.data?.detail || 'Failed to delete teacher');
+      setError(err.response?.data?.detail || 'Failed to remove team member');
     }
   };
 
   const handleCancel = () => {
     setShowForm(false);
-    setEditingTeacher(null);
+    setEditingAdmin(null);
     setFormData({ name: '', email: '' });
+    setError('');
+    setSuccess('');
   };
 
-  const getTeacherStatus = (teacher) => {
-    // If no invitation_status, assume active (legacy teacher or pre-invitation system)
-    if (!teacher.invitation_status || teacher.invitation_status === 'accepted') {
+  const getAdminStatus = (admin) => {
+    // If no invitation_status or status is accepted, assume active
+    if (!admin.invitation_status || admin.invitation_status === 'accepted') {
       return { text: 'Active', class: 'status-active' };
     }
     
-    switch (teacher.invitation_status) {
+    switch (admin.invitation_status) {
       case 'pending':
         // Check if expired
-        if (teacher.invitation_expires_at) {
-          const expiresAt = new Date(teacher.invitation_expires_at);
+        if (admin.invitation_expires_at) {
+          const expiresAt = new Date(admin.invitation_expires_at);
           if (expiresAt < new Date()) {
             return { text: 'Expired', class: 'status-expired' };
           }
@@ -124,19 +144,17 @@ export default function Teachers() {
     }
   };
 
-  const handleResendInvite = async (teacherId) => {
+  const handleResendInvite = async (adminId) => {
     try {
-      setResendingInvite(prev => ({ ...prev, [teacherId]: true }));
-      setError(''); // Clear previous errors
-      setSuccess(''); // Clear previous success messages
-      const response = await schoolAPI.resendTeacherInvitation(schoolId, teacherId);
+      setResendingInvite(prev => ({ ...prev, [adminId]: true }));
+      setError('');
+      setSuccess('');
+      const response = await schoolAPI.resendSchoolAdminInvitation(schoolId, adminId);
       if (response.invitation_sent) {
-        // Reload teachers to get updated status
-        await loadTeachers();
+        await loadAdmins();
         setSuccess('Invitation email sent successfully!');
         setTimeout(() => setSuccess(''), 5000);
       } else {
-        // Show more specific error message
         let errorMessage = response.message || 'Failed to send invitation email.';
         
         if (response.error === 'email_service_not_configured') {
@@ -146,12 +164,10 @@ export default function Teachers() {
         }
         
         setError(errorMessage);
-        // Still reload to show updated token/status
-        await loadTeachers();
+        await loadAdmins();
       }
     } catch (err) {
       if (err.response?.status === 401) {
-        // Treat invalid authentication as an expired session
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
         localStorage.removeItem('user_id');
@@ -161,19 +177,19 @@ export default function Teachers() {
       const errorDetail = err.response?.data?.detail || err.response?.data?.message || err.message;
       setError(errorDetail || 'Failed to resend invitation. Please try again.');
     } finally {
-      setResendingInvite(prev => ({ ...prev, [teacherId]: false }));
+      setResendingInvite(prev => ({ ...prev, [adminId]: false }));
     }
   };
 
   if (loading) {
-    return <div className="teachers-page"><div className="teachers-container">Loading...</div></div>;
+    return <div className="manage-team-page"><div className="manage-team-container">Loading...</div></div>;
   }
 
   return (
-    <div className="teachers-page">
-      <div className="teachers-container">
+    <div className="manage-team-page">
+      <div className="manage-team-container">
         <div className="page-header">
-          <h1>Manage Teachers</h1>
+          <h1>Manage Team</h1>
           <button className="back-button" onClick={() => navigate('/dashboard')}>← Back to Dashboard</button>
         </div>
 
@@ -181,14 +197,14 @@ export default function Teachers() {
         {success && <div className="success-message">{success}</div>}
 
         <div className="actions-bar">
-          <button className="add-button" onClick={() => { setShowForm(true); setEditingTeacher(null); setFormData({ name: '', email: '' }); }}>
-            + Add Teacher
+          <button className="add-button" onClick={() => { setShowForm(true); setEditingAdmin(null); setFormData({ name: '', email: '' }); }}>
+            + Invite Team Member
           </button>
         </div>
 
         {showForm && (
           <div className="form-card">
-            <h2>{editingTeacher ? 'Edit Teacher' : 'Add New Teacher'}</h2>
+            <h2>{editingAdmin ? 'Edit Team Member' : 'Invite School Admin'}</h2>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label>Name *</label>
@@ -197,7 +213,7 @@ export default function Teachers() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  placeholder="Teacher name"
+                  placeholder="Team member name"
                 />
               </div>
               <div className="form-group">
@@ -207,51 +223,57 @@ export default function Teachers() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
-                  placeholder="teacher@example.com"
+                  placeholder="admin@example.com"
                 />
               </div>
               <div className="form-actions">
-                <button type="submit" className="save-button">{editingTeacher ? 'Update' : 'Create'}</button>
+                <button type="submit" className="save-button">{editingAdmin ? 'Update' : 'Send Invitation'}</button>
                 <button type="button" className="cancel-button" onClick={handleCancel}>Cancel</button>
               </div>
             </form>
           </div>
         )}
 
-        <div className="teachers-list">
-          {teachers.length === 0 ? (
-            <div className="empty-state">No teachers found. Add your first teacher to get started.</div>
+        <div className="admins-list">
+          {admins.length === 0 ? (
+            <div className="empty-state">No team members found. Invite your first team member to get started.</div>
           ) : (
-            teachers.map(teacher => {
-              const status = getTeacherStatus(teacher);
-              // Show resend button for pending, expired, or teachers without invitation_status (legacy)
-              const showResendButton = teacher.invitation_status === 'pending' || 
-                                       teacher.invitation_status === 'expired' || 
-                                       !teacher.invitation_status ||
+            admins.map(admin => {
+              const status = getAdminStatus(admin);
+              // Use invitation_id for pending invitations, id for accepted admins
+              const identifier = admin.id || admin.invitation_id;
+              const isPending = !admin.id && admin.invitation_status === 'pending';
+              
+              // Show resend button for pending, expired, or admins without invitation_status
+              const showResendButton = admin.invitation_status === 'pending' || 
+                                       admin.invitation_status === 'expired' || 
+                                       !admin.invitation_status ||
                                        status.class === 'status-expired' ||
                                        status.class === 'status-pending';
               
               return (
-                <div key={teacher.id} className="teacher-card">
-                  <div className="teacher-info">
-                    <div className="teacher-header">
-                      <h3>{teacher.name}</h3>
+                <div key={identifier || admin.email} className="admin-card">
+                  <div className="admin-info">
+                    <div className="admin-header">
+                      <h3>{admin.name || admin.email.split('@')[0] || 'School Admin'}</h3>
                       <span className={`status-badge ${status.class}`}>{status.text}</span>
                     </div>
-                    <p>{teacher.email}</p>
+                    <p>{admin.email}</p>
                   </div>
-                  <div className="teacher-actions">
+                  <div className="admin-actions">
                     {showResendButton && (
                       <button 
                         className="resend-button" 
-                        onClick={() => handleResendInvite(teacher.id)}
-                        disabled={resendingInvite[teacher.id]}
+                        onClick={() => handleResendInvite(identifier)}
+                        disabled={resendingInvite[identifier]}
                       >
-                        {resendingInvite[teacher.id] ? 'Sending...' : 'Resend Invite'}
+                        {resendingInvite[identifier] ? 'Sending...' : 'Resend Invite'}
                       </button>
                     )}
-                    <button className="edit-button" onClick={() => handleEdit(teacher)}>Edit</button>
-                    <button className="delete-button" onClick={() => handleDelete(teacher.id)}>Delete</button>
+                    {!isPending && (
+                      <button className="edit-button" onClick={() => handleEdit(admin)}>Edit</button>
+                    )}
+                    <button className="delete-button" onClick={() => handleDelete(identifier)}>Delete</button>
                   </div>
                 </div>
               );
@@ -262,4 +284,3 @@ export default function Teachers() {
     </div>
   );
 }
-

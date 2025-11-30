@@ -44,16 +44,32 @@ export const schoolAPI = {
     formData.append('password', password);
     return api.post('/api/auth/school-admin/signin', formData).then(r => r.data);
   },
-  signup: (email, password, name, schoolName, contactInfo) => {
+  signup: (email, password, name, schoolName, contactInfo, invitationToken) => {
     const formData = new FormData();
     formData.append('email', email);
     formData.append('password', password);
     formData.append('name', name);
-    formData.append('school_name', schoolName);
+    if (schoolName) {
+      formData.append('school_name', schoolName);
+    }
     if (contactInfo) {
       formData.append('contact_info', contactInfo);
     }
+    if (invitationToken) {
+      formData.append('invitation_token', invitationToken);
+    }
     return api.post('/api/auth/school-admin/signup', formData).then(r => r.data);
+  },
+  getInvitationStatus: (token) => api.get('/api/auth/school-admin/invitation-status', { params: { token } }).then(r => r.data),
+  acceptInvitation: (token, password, confirmPassword, name) => {
+    const formData = new FormData();
+    formData.append('password', password);
+    if (confirmPassword) formData.append('confirm_password', confirmPassword);
+    if (name) formData.append('name', name);
+    return api.post(`/api/auth/school-admin/accept-invitation?token=${token}`, formData).then(r => r.data);
+  },
+  acceptInvitationAuthenticated: (token) => {
+    return api.post(`/api/auth/school-admin/accept-invitation-authenticated?token=${token}`).then(r => r.data);
   },
   requestPasswordReset: (email) => {
     const formData = new FormData();
@@ -156,6 +172,27 @@ export const schoolAPI = {
     return api.post(`/api/schools/${schoolId}/branding/upload`, formData).then(r => r.data);
   },
   getDashboard: (schoolId) => api.get(`/api/schools/${schoolId}/dashboard`).then(r => r.data),
+  getSchool: (schoolId) => api.get(`/api/schools/${schoolId}`).then(r => r.data),
+  updateSchool: (schoolId, name) => {
+    const formData = new FormData();
+    if (name) formData.append('name', name);
+    return api.put(`/api/schools/${schoolId}`, formData).then(r => r.data);
+  },
+  getSchoolAdmins: (schoolId) => api.get(`/api/schools/${schoolId}/admins`).then(r => r.data),
+  inviteSchoolAdmin: (schoolId, email, name) => {
+    const formData = new FormData();
+    formData.append('email', email);
+    formData.append('name', name);
+    return api.post(`/api/schools/${schoolId}/admins/invite`, formData).then(r => r.data);
+  },
+  updateSchoolAdmin: (schoolId, adminId, name, email) => {
+    const formData = new FormData();
+    if (name) formData.append('name', name);
+    if (email) formData.append('email', email);
+    return api.put(`/api/schools/${schoolId}/admins/${adminId}`, formData).then(r => r.data);
+  },
+  deleteSchoolAdmin: (schoolId, adminId) => api.delete(`/api/schools/${schoolId}/admins/${adminId}`).then(r => r.data),
+  resendSchoolAdminInvitation: (schoolId, adminId) => api.post(`/api/schools/${schoolId}/admins/${adminId}/resend-invitation`).then(r => r.data),
 };
 
 export default api;

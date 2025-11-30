@@ -9,6 +9,7 @@ import Classes from './pages/Classes';
 import Students from './pages/Students';
 import Payments from './pages/Payments';
 import Branding from './pages/Branding';
+import ManageTeam from './pages/ManageTeam';
 import ResetPassword from './pages/ResetPassword';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { loadTheme } from './lib/theme';
@@ -37,6 +38,7 @@ function App() {
           <Route path="/students" element={<Students />} />
           <Route path="/payments" element={<Payments />} />
           <Route path="/branding" element={<Branding />} />
+          <Route path="/team" element={<ManageTeam />} />
           <Route path="/" element={<Navigate to="/signin" replace />} />
         </Routes>
       </Router>

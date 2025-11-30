@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { schoolAPI } from '../lib/api';
+import { loadTheme } from '../lib/theme';
 import ThemeToggle from '../components/ThemeToggle';
 import './Dashboard.css';
 
@@ -9,8 +10,14 @@ export default function Dashboard() {
   const [locations, setLocations] = useState([]);
   const [classes, setClasses] = useState([]);
   const [students, setStudents] = useState([]);
+  const [school, setSchool] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [schoolName, setSchoolName] = useState('');
+  const [savingName, setSavingName] = useState(false);
+  const [nameError, setNameError] = useState('');
+  const [nameSuccess, setNameSuccess] = useState('');
   const navigate = useNavigate();
   
   // Use 'school_id' (with underscore) to match what sign-in stores
@@ -23,18 +30,24 @@ export default function Dashboard() {
       return;
     }
 
+    // Load theme for branding
+    loadTheme(schoolId);
+    
     // Load all data in parallel
     Promise.all([
       schoolAPI.getDashboard(schoolId),
       schoolAPI.getLocations(schoolId),
       schoolAPI.getClasses(schoolId),
-      schoolAPI.getStudents(schoolId)
+      schoolAPI.getStudents(schoolId),
+      schoolAPI.getSchool(schoolId)
     ])
-      .then(([dashboardData, locationsData, classesData, studentsData]) => {
+      .then(([dashboardData, locationsData, classesData, studentsData, schoolData]) => {
         setDashboard(dashboardData);
         setLocations((locationsData.locations || []).filter(l => l.is_active));
         setClasses(classesData.classes || []);
         setStudents(studentsData.students || []);
+        setSchool(schoolData.school);
+        setSchoolName(schoolData.school?.name || '');
         setError(null);
       })
       .catch((err) => {
@@ -93,11 +106,87 @@ export default function Dashboard() {
     navigate('/signin');
   };
 
+  const handleEditName = () => {
+    setIsEditingName(true);
+  };
+
+  const handleSaveName = async () => {
+    setNameError('');
+    setNameSuccess('');
+    
+    if (!schoolName.trim()) {
+      setNameError('School name cannot be empty');
+      return;
+    }
+    
+    setSavingName(true);
+    try {
+      const result = await schoolAPI.updateSchool(schoolId, schoolName.trim());
+      setSchool(result.school);
+      setIsEditingName(false);
+      setNameSuccess('School name updated successfully!');
+      setTimeout(() => setNameSuccess(''), 3000);
+    } catch (err) {
+      console.error('Error updating school name:', err);
+      setNameError(err.response?.data?.detail || 'Failed to update school name');
+    } finally {
+      setSavingName(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setSchoolName(school?.name || '');
+    setIsEditingName(false);
+    setNameError('');
+    setNameSuccess('');
+  };
+
   return (
     <div className="dashboard-page">
       <div className="dashboard-container">
         <div className="dashboard-header">
-          <h1>School Admin Dashboard</h1>
+          <div className="school-name-container">
+            {isEditingName ? (
+              <div className="school-name-edit-container">
+                {nameError && <div className="name-error-message">{nameError}</div>}
+                {nameSuccess && <div className="name-success-message">{nameSuccess}</div>}
+                <div className="school-name-edit">
+                  <input
+                    type="text"
+                    value={schoolName}
+                    onChange={(e) => setSchoolName(e.target.value)}
+                    className="school-name-input"
+                    autoFocus
+                  />
+                  <button
+                    className="save-button"
+                    onClick={handleSaveName}
+                    disabled={savingName}
+                  >
+                    {savingName ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    className="cancel-button"
+                    onClick={handleCancelEdit}
+                    disabled={savingName}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="school-name-display">
+                <h1>{school?.name || 'Loading...'}</h1>
+                <button
+                  className="edit-icon-button"
+                  onClick={handleEditName}
+                  title="Edit school name"
+                >
+                  ✏️
+                </button>
+              </div>
+            )}
+          </div>
           <button className="logout-button" onClick={handleLogout}>Logout</button>
         </div>
         <nav>
@@ -107,6 +196,7 @@ export default function Dashboard() {
           <Link to="/students">Manage Students</Link>
           <Link to="/payments">Payments</Link>
           <Link to="/branding">Branding</Link>
+          <Link to="/team">Manage Team</Link>
         </nav>
         <div className="metrics">
           <div className="metric-card">

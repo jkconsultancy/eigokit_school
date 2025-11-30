@@ -1,10 +1,10 @@
-.locations-page {
+.manage-team-page {
   padding: 20px;
   background: #f5f5f5;
   min-height: 100vh;
 }
 
-.locations-container {
+.manage-team-container {
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -70,12 +70,6 @@
   color: #213547;
 }
 
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
 .form-group {
   margin-bottom: 20px;
 }
@@ -85,18 +79,6 @@
   margin-bottom: 8px;
   font-weight: 600;
   color: #213547;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
-
-.checkbox-label input[type="checkbox"] {
-  width: auto;
-  cursor: pointer;
 }
 
 .form-group input {
@@ -148,56 +130,89 @@
   background: #4b5563;
 }
 
-.locations-list {
+.admins-list {
   display: grid;
   gap: 20px;
 }
 
-.location-card {
+.admin-card {
   background: white;
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
 }
 
-.location-card.inactive {
-  opacity: 0.7;
-  border-left: 4px solid #6b7280;
-}
-
-.location-info h3 {
-  margin: 0 0 12px 0;
-  color: #213547;
+.admin-header {
   display: flex;
   align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.admin-info h3 {
+  margin: 0;
+  color: #213547;
+}
+
+.admin-info p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-active {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-expired {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.status-inactive {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.admin-actions {
+  display: flex;
   gap: 10px;
 }
 
-.inactive-badge {
-  background: #6b7280;
+.resend-button {
+  padding: 8px 16px;
+  background: #10B981;
   color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: normal;
-}
-
-.location-info p {
-  margin: 6px 0;
-  color: #6b7280;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
   font-size: 14px;
 }
 
-.location-info strong {
-  color: #213547;
+.resend-button:hover:not(:disabled) {
+  background: #059669;
 }
 
-.location-actions {
-  display: flex;
-  gap: 10px;
+.resend-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .edit-button {
@@ -245,3 +260,11 @@
   margin-bottom: 20px;
 }
 
+.success-message {
+  background: #d4edda;
+  color: #155724;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #c3e6cb;
+}

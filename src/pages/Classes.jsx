@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { schoolAPI } from '../lib/api';
+import { loadTheme } from '../lib/theme';
 import './Classes.css';
 
 export default function Classes() {
@@ -37,6 +38,8 @@ export default function Classes() {
       navigate('/signin');
       return;
     }
+    // Load theme for branding
+    loadTheme(schoolId);
     loadData();
   }, [schoolId, navigate]);
 
