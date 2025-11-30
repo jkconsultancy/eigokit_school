@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { schoolAPI } from '../lib/api';
 import { loadTheme } from '../lib/theme';
 import { ICONS, getIconsByIds } from '../constants/icons';
@@ -10,6 +10,7 @@ export default function Students() {
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   const [generatingSequence, setGeneratingSequence] = useState(false);
@@ -18,18 +19,16 @@ export default function Students() {
     class_id: '',
     icon_sequence: []
   });
-  const navigate = useNavigate();
   const schoolId = localStorage.getItem('school_id');
 
   useEffect(() => {
     if (!schoolId) {
-      navigate('/signin');
       return;
     }
     // Load theme for branding
     loadTheme(schoolId);
     loadData();
-  }, [schoolId, navigate]);
+  }, [schoolId]);
 
   // Generate icon sequence when form opens for new student (if name is already filled)
   useEffect(() => {
@@ -53,7 +52,7 @@ export default function Students() {
       if (err.response?.status === 401) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
-        navigate('/signin');
+        window.location.href = '/signin';
         return;
       }
       let errorMessage = 'Failed to load data';
@@ -77,6 +76,7 @@ export default function Students() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     try {
       // Convert icon_sequence array to comma-separated string for API
       const iconSequenceStr = Array.isArray(formData.icon_sequence) && formData.icon_sequence.length > 0
@@ -99,7 +99,7 @@ export default function Students() {
       if (err.response?.status === 401) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
-        navigate('/signin');
+        window.location.href = '/signin';
         return;
       }
       let errorMessage = 'Failed to save student';
@@ -137,7 +137,7 @@ export default function Students() {
       if (err.response?.status === 401) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
-        navigate('/signin');
+        window.location.href = '/signin';
         return;
       }
       let errorMessage = 'Failed to delete student';
@@ -153,6 +153,26 @@ export default function Students() {
         errorMessage = err.message;
       }
       setError(errorMessage);
+    }
+  };
+
+  const handleToggleActive = async (student) => {
+    try {
+      setError('');
+      const newActiveStatus = !(student.is_active !== false);
+      await schoolAPI.updateStudent(schoolId, student.id, { is_active: newActiveStatus });
+      setSuccess(`Student ${newActiveStatus ? 'activated' : 'deactivated'} successfully!`);
+      setTimeout(() => setSuccess(''), 3000);
+      loadData();
+    } catch (err) {
+      if (err.response?.status === 401) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('school_id');
+        window.location.href = '/signin';
+        return;
+      }
+      setSuccess('');
+      setError(err.response?.data?.detail || 'Failed to update student status');
     }
   };
 
@@ -207,14 +227,13 @@ export default function Students() {
   }
 
   return (
-    <div className="students-page">
-      <div className="students-container">
-        <div className="page-header">
-          <h1>Manage Students</h1>
-          <button className="back-button" onClick={() => navigate('/dashboard')}>← Back to Dashboard</button>
-        </div>
+    <div className="manage-page">
+      <div className="manage-container">
+        <h1>Manage Students</h1>
+        <Link to="/dashboard" className="back-link">← Back to Dashboard</Link>
 
         {error && <div className="error-message">{String(error)}</div>}
+        {success && <div className="success-message">{success}</div>}
 
         <div className="actions-bar">
           <button className="add-button" onClick={() => { 
@@ -299,7 +318,12 @@ export default function Students() {
             students.map(student => (
               <div key={student.id} className="student-card">
                 <div className="student-info">
-                  <h3>{student.name}</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                    <h3>{student.name}</h3>
+                    {student.is_active === false && (
+                      <span className="status-badge status-inactive">Inactive</span>
+                    )}
+                  </div>
                   <p><strong>Class:</strong> {getClassName(student.class_id)}</p>
                   {student.icon_sequence && Array.isArray(student.icon_sequence) && student.icon_sequence.length > 0 && (
                     <div className="student-registration-code">
@@ -319,6 +343,12 @@ export default function Students() {
                   <p><strong>Status:</strong> {student.registration_status || 'pending'}</p>
                 </div>
                 <div className="student-actions">
+                  <button 
+                    className={student.is_active !== false ? "deactivate-button" : "activate-button"}
+                    onClick={() => handleToggleActive(student)}
+                  >
+                    {student.is_active !== false ? 'Deactivate' : 'Activate'}
+                  </button>
                   <button className="edit-button" onClick={() => handleEdit(student)}>Edit</button>
                   <button className="delete-button" onClick={() => handleDelete(student.id)}>Delete</button>
                 </div>

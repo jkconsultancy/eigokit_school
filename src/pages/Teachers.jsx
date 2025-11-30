@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { schoolAPI } from '../lib/api';
 import { loadTheme } from '../lib/theme';
 import './Teachers.css';
@@ -13,18 +13,16 @@ export default function Teachers() {
   const [editingTeacher, setEditingTeacher] = useState(null);
   const [formData, setFormData] = useState({ name: '', email: '' });
   const [resendingInvite, setResendingInvite] = useState({});
-  const navigate = useNavigate();
   const schoolId = localStorage.getItem('school_id');
 
   useEffect(() => {
     if (!schoolId) {
-      navigate('/signin');
       return;
     }
     // Load theme for branding
     loadTheme(schoolId);
     loadTeachers();
-  }, [schoolId, navigate]);
+  }, [schoolId]);
 
   const loadTeachers = async () => {
     try {
@@ -38,7 +36,7 @@ export default function Teachers() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
         localStorage.removeItem('user_id');
-        navigate('/signin');
+        window.location.href = '/signin';
         return;
       }
       setError(err.response?.data?.detail || 'Failed to load teachers');
@@ -65,7 +63,7 @@ export default function Teachers() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
         localStorage.removeItem('user_id');
-        navigate('/signin');
+        window.location.href = '/signin';
         return;
       }
       setError(err.response?.data?.detail || 'Failed to save teacher');
@@ -88,7 +86,7 @@ export default function Teachers() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
         localStorage.removeItem('user_id');
-        navigate('/signin');
+        window.location.href = '/signin';
         return;
       }
       setError(err.response?.data?.detail || 'Failed to delete teacher');
@@ -102,6 +100,11 @@ export default function Teachers() {
   };
 
   const getTeacherStatus = (teacher) => {
+    // Check if teacher is inactive
+    if (teacher.is_active === false) {
+      return { text: 'Inactive', class: 'status-inactive' };
+    }
+    
     // If no invitation_status, assume active (legacy teacher or pre-invitation system)
     if (!teacher.invitation_status || teacher.invitation_status === 'accepted') {
       return { text: 'Active', class: 'status-active' };
@@ -121,6 +124,25 @@ export default function Teachers() {
         return { text: 'Expired', class: 'status-expired' };
       default:
         return { text: 'Inactive', class: 'status-inactive' };
+    }
+  };
+
+  const handleToggleActive = async (teacher) => {
+    try {
+      const newActiveStatus = !(teacher.is_active !== false);
+      await schoolAPI.updateTeacher(schoolId, teacher.id, teacher.name, teacher.email, newActiveStatus);
+      setSuccess(`Teacher ${newActiveStatus ? 'activated' : 'deactivated'} successfully!`);
+      setTimeout(() => setSuccess(''), 3000);
+      loadTeachers();
+    } catch (err) {
+      if (err.response?.status === 401) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('school_id');
+        localStorage.removeItem('user_id');
+        window.location.href = '/signin';
+        return;
+      }
+      setError(err.response?.data?.detail || 'Failed to update teacher status');
     }
   };
 
@@ -155,7 +177,7 @@ export default function Teachers() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
         localStorage.removeItem('user_id');
-        navigate('/signin');
+        window.location.href = '/signin';
         return;
       }
       const errorDetail = err.response?.data?.detail || err.response?.data?.message || err.message;
@@ -170,12 +192,10 @@ export default function Teachers() {
   }
 
   return (
-    <div className="teachers-page">
-      <div className="teachers-container">
-        <div className="page-header">
-          <h1>Manage Teachers</h1>
-          <button className="back-button" onClick={() => navigate('/dashboard')}>← Back to Dashboard</button>
-        </div>
+    <div className="manage-page">
+      <div className="manage-container">
+        <h1>Manage Teachers</h1>
+        <Link to="/dashboard" className="back-link">← Back to Dashboard</Link>
 
         {error && <div className="error-message">{error}</div>}
         {success && <div className="success-message">{success}</div>}
@@ -250,6 +270,12 @@ export default function Teachers() {
                         {resendingInvite[teacher.id] ? 'Sending...' : 'Resend Invite'}
                       </button>
                     )}
+                    <button 
+                      className={teacher.is_active !== false ? "deactivate-button" : "activate-button"}
+                      onClick={() => handleToggleActive(teacher)}
+                    >
+                      {teacher.is_active !== false ? 'Deactivate' : 'Activate'}
+                    </button>
                     <button className="edit-button" onClick={() => handleEdit(teacher)}>Edit</button>
                     <button className="delete-button" onClick={() => handleDelete(teacher.id)}>Delete</button>
                   </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { schoolAPI } from '../lib/api';
 import { loadTheme } from '../lib/theme';
 import './Locations.css';
@@ -20,18 +20,16 @@ export default function Locations() {
     email: '',
     is_active: true
   });
-  const navigate = useNavigate();
   const schoolId = localStorage.getItem('school_id');
 
   useEffect(() => {
     if (!schoolId) {
-      navigate('/signin');
       return;
     }
     // Load theme for branding
     loadTheme(schoolId);
     loadLocations();
-  }, [schoolId, navigate]);
+  }, [schoolId]);
 
   const loadLocations = async () => {
     try {
@@ -43,7 +41,7 @@ export default function Locations() {
       if (err.response?.status === 401) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
-        navigate('/signin');
+        window.location.href = '/signin';
         return;
       }
       let errorMessage = 'Failed to load locations';
@@ -90,7 +88,7 @@ export default function Locations() {
       if (err.response?.status === 401) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
-        navigate('/signin');
+        window.location.href = '/signin';
         return;
       }
       let errorMessage = 'Failed to save location';
@@ -136,7 +134,7 @@ export default function Locations() {
       if (err.response?.status === 401) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
-        navigate('/signin');
+        window.location.href = '/signin';
         return;
       }
       let errorMessage = 'Failed to delete location';
@@ -175,12 +173,10 @@ export default function Locations() {
   }
 
   return (
-    <div className="locations-page">
-      <div className="locations-container">
-        <div className="page-header">
-          <h1>Manage School Locations</h1>
-          <button className="back-button" onClick={() => navigate('/dashboard')}>← Back to Dashboard</button>
-        </div>
+    <div className="manage-page">
+      <div className="manage-container">
+        <h1>Manage Locations</h1>
+        <Link to="/dashboard" className="back-link">← Back to Dashboard</Link>
 
         {error && <div className="error-message">{String(error)}</div>}
 

@@ -44,8 +44,8 @@ export default function Dashboard() {
       .then(([dashboardData, locationsData, classesData, studentsData, schoolData]) => {
         setDashboard(dashboardData);
         setLocations((locationsData.locations || []).filter(l => l.is_active));
-        setClasses(classesData.classes || []);
-        setStudents(studentsData.students || []);
+        setClasses((classesData.classes || []).filter(c => c.is_active !== false));
+        setStudents((studentsData.students || []).filter(s => s.is_active !== false));
         setSchool(schoolData.school);
         setSchoolName(schoolData.school?.name || '');
         setError(null);
@@ -190,34 +190,30 @@ export default function Dashboard() {
           <button className="logout-button" onClick={handleLogout}>Logout</button>
         </div>
         <nav>
-          <Link to="/teachers">Manage Teachers</Link>
-          <Link to="/locations">Manage Locations</Link>
-          <Link to="/classes">Manage Classes</Link>
-          <Link to="/students">Manage Students</Link>
-          <Link to="/payments">Payments</Link>
-          <Link to="/branding">Branding</Link>
-          <Link to="/team">Manage Team</Link>
+          <Link to="/branding" target="_blank" rel="noopener noreferrer">Branding</Link>
+          <Link to="/team" target="_blank" rel="noopener noreferrer">Manage Team</Link>
+          <Link to="/locations" target="_blank" rel="noopener noreferrer">Manage Locations</Link>
+          <Link to="/teachers" target="_blank" rel="noopener noreferrer">Manage Teachers</Link>
+          <Link to="/classes" target="_blank" rel="noopener noreferrer">Manage Classes</Link>
+          <Link to="/students" target="_blank" rel="noopener noreferrer">Manage Students</Link>
+          <Link to="/payments" target="_blank" rel="noopener noreferrer">Payments</Link>
         </nav>
         <div className="metrics">
           <div className="metric-card">
+            <h3>Active Locations</h3>
+            <p>{dashboard.school_level?.active_locations || 0}</p>
+          </div>
+          <div className="metric-card">
+            <h3>Active Teachers</h3>
+            <p>{dashboard.school_level?.active_teachers || 0}</p>
+          </div>
+          <div className="metric-card">
+            <h3>Active Classes</h3>
+            <p>{dashboard.school_level?.active_classes || 0}</p>
+          </div>
+          <div className="metric-card">
             <h3>Active Students</h3>
             <p>{dashboard.school_level?.active_students || 0}</p>
-          </div>
-          <div className="metric-card">
-            <h3>Survey Completion</h3>
-            <p>{Math.round(dashboard.school_level?.survey_completion_rate || 0)}%</p>
-          </div>
-          <div className="metric-card">
-            <h3>Total Teachers</h3>
-            <p>{dashboard.teacher_level?.total_teachers || 0}</p>
-          </div>
-          <div className="metric-card">
-            <h3>Active Locations</h3>
-            <p>{locations.length}</p>
-          </div>
-          <div className="metric-card">
-            <h3>Total Classes</h3>
-            <p>{classes.length}</p>
           </div>
         </div>
         
@@ -237,7 +233,7 @@ export default function Dashboard() {
                 {locations.length > 5 && <p className="more-text">+ {locations.length - 5} more</p>}
               </div>
             )}
-            <Link to="/locations" className="view-all-link">View All Locations →</Link>
+            <Link to="/locations" className="view-all-link" target="_blank" rel="noopener noreferrer">View All Locations →</Link>
           </div>
 
           <div className="dashboard-section">
@@ -258,7 +254,7 @@ export default function Dashboard() {
                 {classes.length > 5 && <p className="more-text">+ {classes.length - 5} more</p>}
               </div>
             )}
-            <Link to="/classes" className="view-all-link">View All Classes →</Link>
+            <Link to="/classes" className="view-all-link" target="_blank" rel="noopener noreferrer">View All Classes →</Link>
           </div>
 
           <div className="dashboard-section">
@@ -276,7 +272,7 @@ export default function Dashboard() {
                 {students.length > 5 && <p className="more-text">+ {students.length - 5} more</p>}
               </div>
             )}
-            <Link to="/students" className="view-all-link">View All Students →</Link>
+            <Link to="/students" className="view-all-link" target="_blank" rel="noopener noreferrer">View All Students →</Link>
           </div>
         </div>
       </div>

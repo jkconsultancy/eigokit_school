@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { schoolAPI } from '../lib/api';
 import { loadTheme } from '../lib/theme';
 import './Classes.css';
@@ -10,6 +10,7 @@ export default function Classes() {
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingClass, setEditingClass] = useState(null);
   const [formData, setFormData] = useState({
@@ -30,18 +31,16 @@ export default function Classes() {
     email: '',
     is_active: true
   });
-  const navigate = useNavigate();
   const schoolId = localStorage.getItem('school_id');
 
   useEffect(() => {
     if (!schoolId) {
-      navigate('/signin');
       return;
     }
     // Load theme for branding
     loadTheme(schoolId);
     loadData();
-  }, [schoolId, navigate]);
+  }, [schoolId]);
 
   const loadData = async () => {
     try {
@@ -59,7 +58,7 @@ export default function Classes() {
       if (err.response?.status === 401) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
-        navigate('/signin');
+        window.location.href = '/signin';
         return;
       }
       let errorMessage = 'Failed to load data';
@@ -97,7 +96,7 @@ export default function Classes() {
       if (err.response?.status === 401) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
-        navigate('/signin');
+        window.location.href = '/signin';
         return;
       }
       let errorMessage = 'Failed to save class';
@@ -135,7 +134,7 @@ export default function Classes() {
       if (err.response?.status === 401) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
-        navigate('/signin');
+        window.location.href = '/signin';
         return;
       }
       let errorMessage = 'Failed to delete class';
@@ -195,7 +194,7 @@ export default function Classes() {
       if (err.response?.status === 401) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
-        navigate('/signin');
+        window.location.href = '/signin';
         return;
       }
       let errorMessage = 'Failed to create teacher';
@@ -239,7 +238,7 @@ export default function Classes() {
       if (err.response?.status === 401) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
-        navigate('/signin');
+        window.location.href = '/signin';
         return;
       }
       let errorMessage = 'Failed to create location';
@@ -271,18 +270,17 @@ export default function Classes() {
   };
 
   if (loading) {
-    return <div className="classes-page"><div className="classes-container">Loading...</div></div>;
+    return <div className="manage-page"><div className="manage-container">Loading...</div></div>;
   }
 
   return (
-    <div className="classes-page">
-      <div className="classes-container">
-        <div className="page-header">
-          <h1>Manage Classes</h1>
-          <button className="back-button" onClick={() => navigate('/dashboard')}>← Back to Dashboard</button>
-        </div>
+    <div className="manage-page">
+      <div className="manage-container">
+        <h1>Manage Classes</h1>
+        <Link to="/dashboard" className="back-link">← Back to Dashboard</Link>
 
         {error && <div className="error-message">{String(error)}</div>}
+        {success && <div className="success-message">{success}</div>}
 
         <div className="actions-bar">
           <button className="add-button" onClick={() => { setShowForm(true); setEditingClass(null); setFormData({ name: '', teacher_id: '', location_id: '' }); }}>
@@ -482,11 +480,22 @@ export default function Classes() {
             classes.map(classItem => (
               <div key={classItem.id} className="class-card">
                 <div className="class-info">
-                  <h3>{classItem.name}</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                    <h3>{classItem.name}</h3>
+                    {classItem.is_active === false && (
+                      <span className="status-badge status-inactive">Inactive</span>
+                    )}
+                  </div>
                   <p><strong>Teacher:</strong> {getTeacherName(classItem.teacher_id)}</p>
                   <p><strong>Location:</strong> {getLocationName(classItem.location_id)}</p>
                 </div>
                 <div className="class-actions">
+                  <button 
+                    className={classItem.is_active !== false ? "deactivate-button" : "activate-button"}
+                    onClick={() => handleToggleActive(classItem)}
+                  >
+                    {classItem.is_active !== false ? 'Deactivate' : 'Activate'}
+                  </button>
                   <button className="edit-button" onClick={() => handleEdit(classItem)}>Edit</button>
                   <button className="delete-button" onClick={() => handleDelete(classItem.id)}>Delete</button>
                 </div>

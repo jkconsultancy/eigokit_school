@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { schoolAPI } from '../lib/api';
 import { loadTheme } from '../lib/theme';
 import './ManageTeam.css';
@@ -13,18 +13,16 @@ export default function ManageTeam() {
   const [editingAdmin, setEditingAdmin] = useState(null);
   const [formData, setFormData] = useState({ name: '', email: '' });
   const [resendingInvite, setResendingInvite] = useState({});
-  const navigate = useNavigate();
   const schoolId = localStorage.getItem('school_id');
 
   useEffect(() => {
     if (!schoolId) {
-      navigate('/signin');
       return;
     }
     // Load theme for branding
     loadTheme(schoolId);
     loadAdmins();
-  }, [schoolId, navigate]);
+  }, [schoolId]);
 
   const loadAdmins = async () => {
     try {
@@ -38,7 +36,7 @@ export default function ManageTeam() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
         localStorage.removeItem('user_id');
-        navigate('/signin');
+        window.location.href = '/signin';
         return;
       }
       const errorMessage = err.response?.data?.detail || err.message || 'Failed to load team members';
@@ -81,7 +79,7 @@ export default function ManageTeam() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
         localStorage.removeItem('user_id');
-        navigate('/signin');
+        window.location.href = '/signin';
         return;
       }
       setError(err.response?.data?.detail || (editingAdmin ? 'Failed to update admin' : 'Failed to send invitation'));
@@ -106,7 +104,7 @@ export default function ManageTeam() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
         localStorage.removeItem('user_id');
-        navigate('/signin');
+        window.location.href = '/signin';
         return;
       }
       setError(err.response?.data?.detail || 'Failed to remove team member');
@@ -122,6 +120,11 @@ export default function ManageTeam() {
   };
 
   const getAdminStatus = (admin) => {
+    // Check if admin is inactive (only for accepted admins with user accounts)
+    if (admin.id && admin.is_active === false) {
+      return { text: 'Inactive', class: 'status-inactive' };
+    }
+    
     // If no invitation_status or status is accepted, assume active
     if (!admin.invitation_status || admin.invitation_status === 'accepted') {
       return { text: 'Active', class: 'status-active' };
@@ -141,6 +144,29 @@ export default function ManageTeam() {
         return { text: 'Expired', class: 'status-expired' };
       default:
         return { text: 'Inactive', class: 'status-inactive' };
+    }
+  };
+
+  const handleToggleActive = async (admin) => {
+    if (!admin.id) {
+      setError('Cannot change status for pending invitations');
+      return;
+    }
+    try {
+      const newActiveStatus = !(admin.is_active !== false);
+      await schoolAPI.updateSchoolAdmin(schoolId, admin.id, admin.name, admin.email, newActiveStatus);
+      setSuccess(`Team member ${newActiveStatus ? 'activated' : 'deactivated'} successfully!`);
+      setTimeout(() => setSuccess(''), 3000);
+      loadAdmins();
+    } catch (err) {
+      if (err.response?.status === 401) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('school_id');
+        localStorage.removeItem('user_id');
+        window.location.href = '/signin';
+        return;
+      }
+      setError(err.response?.data?.detail || 'Failed to update team member status');
     }
   };
 
@@ -171,7 +197,7 @@ export default function ManageTeam() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('school_id');
         localStorage.removeItem('user_id');
-        navigate('/signin');
+        window.location.href = '/signin';
         return;
       }
       const errorDetail = err.response?.data?.detail || err.response?.data?.message || err.message;
@@ -182,16 +208,14 @@ export default function ManageTeam() {
   };
 
   if (loading) {
-    return <div className="manage-team-page"><div className="manage-team-container">Loading...</div></div>;
+    return <div className="manage-page"><div className="manage-container">Loading...</div></div>;
   }
 
   return (
-    <div className="manage-team-page">
-      <div className="manage-team-container">
-        <div className="page-header">
-          <h1>Manage Team</h1>
-          <button className="back-button" onClick={() => navigate('/dashboard')}>← Back to Dashboard</button>
-        </div>
+    <div className="manage-page">
+      <div className="manage-container">
+        <h1>Manage Team</h1>
+        <Link to="/dashboard" className="back-link">← Back to Dashboard</Link>
 
         {error && <div className="error-message">{error}</div>}
         {success && <div className="success-message">{success}</div>}
@@ -268,6 +292,14 @@ export default function ManageTeam() {
                         disabled={resendingInvite[identifier]}
                       >
                         {resendingInvite[identifier] ? 'Sending...' : 'Resend Invite'}
+                      </button>
+                    )}
+                    {!isPending && admin.id && (
+                      <button 
+                        className={admin.is_active !== false ? "deactivate-button" : "activate-button"}
+                        onClick={() => handleToggleActive(admin)}
+                      >
+                        {admin.is_active !== false ? 'Deactivate' : 'Activate'}
                       </button>
                     )}
                     {!isPending && (

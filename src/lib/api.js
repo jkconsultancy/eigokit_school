@@ -85,10 +85,11 @@ export const schoolAPI = {
     formData.append('email', email);
     return api.post(`/api/schools/${schoolId}/teachers`, formData).then(r => r.data);
   },
-  updateTeacher: (schoolId, teacherId, name, email) => {
+  updateTeacher: (schoolId, teacherId, name, email, isActive) => {
     const formData = new FormData();
     if (name) formData.append('name', name);
     if (email) formData.append('email', email);
+    if (isActive !== undefined) formData.append('is_active', String(isActive));
     return api.put(`/api/schools/${schoolId}/teachers/${teacherId}`, formData).then(r => r.data);
   },
   deleteTeacher: (schoolId, teacherId) => api.delete(`/api/schools/${schoolId}/teachers/${teacherId}`).then(r => r.data),
@@ -139,6 +140,7 @@ export const schoolAPI = {
     if (studentData.name) formData.append('name', studentData.name);
     if (studentData.class_id) formData.append('class_id', studentData.class_id);
     if (studentData.icon_sequence !== undefined) formData.append('icon_sequence', studentData.icon_sequence || '');
+    if (studentData.is_active !== undefined) formData.append('is_active', String(studentData.is_active));
     return api.put(`/api/schools/${schoolId}/students/${studentId}`, formData).then(r => r.data);
   },
   deleteStudent: (schoolId, studentId) => api.delete(`/api/schools/${schoolId}/students/${studentId}`).then(r => r.data),
@@ -157,6 +159,7 @@ export const schoolAPI = {
     if (classData.name) formData.append('name', classData.name);
     if (classData.teacher_id) formData.append('teacher_id', classData.teacher_id);
     if (classData.location_id !== undefined) formData.append('location_id', classData.location_id || '');
+    if (classData.is_active !== undefined) formData.append('is_active', String(classData.is_active));
     return api.put(`/api/schools/${schoolId}/classes/${classId}`, formData).then(r => r.data);
   },
   deleteClass: (schoolId, classId) => api.delete(`/api/schools/${schoolId}/classes/${classId}`).then(r => r.data),
@@ -185,10 +188,11 @@ export const schoolAPI = {
     formData.append('name', name);
     return api.post(`/api/schools/${schoolId}/admins/invite`, formData).then(r => r.data);
   },
-  updateSchoolAdmin: (schoolId, adminId, name, email) => {
+  updateSchoolAdmin: (schoolId, adminId, name, email, isActive) => {
     const formData = new FormData();
     if (name) formData.append('name', name);
     if (email) formData.append('email', email);
+    if (isActive !== undefined) formData.append('is_active', String(isActive));
     return api.put(`/api/schools/${schoolId}/admins/${adminId}`, formData).then(r => r.data);
   },
   deleteSchoolAdmin: (schoolId, adminId) => api.delete(`/api/schools/${schoolId}/admins/${adminId}`).then(r => r.data),
